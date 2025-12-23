@@ -24,7 +24,7 @@ def get_email_body(file_path):
 email_body_template = get_email_body("email_template.docx")
 
 
-def send_email(receiver_name, company_name, job_link, receiver_email):
+def send_email(receiver_name, company_name, job_link, receiver_email, resume_filename):
     body = (
         email_body_template.replace("{receiver_name}", receiver_name)
         .replace("{company_name}", company_name)
@@ -41,12 +41,12 @@ def send_email(receiver_name, company_name, job_link, receiver_email):
 
     msg.attach(MIMEText(body, "html"))
 
-    with open("Neeraj_Gupta_SDE1.pdf", "rb") as resume:  
+    with open(resume_filename, "rb") as resume:  
         part = MIMEBase("application", "octet-stream")
         part.set_payload(resume.read())
         encoders.encode_base64(part)
         part.add_header(
-            "Content-Disposition", f'attachment; filename="Neeraj_Gupta_SDE1.pdf"'
+            "Content-Disposition", f'attachment; filename="{resume_filename}"'
         )
         msg.attach(part)
 
@@ -54,13 +54,20 @@ def send_email(receiver_name, company_name, job_link, receiver_email):
         server.starttls()
         server.login(your_email, your_password)
         server.send_message(msg)
-    print(f"Email sent to {receiver_name} ({receiver_email}) for {company_name}.")
+    print(f"Email sent to {receiver_name} ({receiver_email}) for {company_name} with {resume_filename}.")
 
 
 for _, row in contacts.iterrows():
+    resume_val = row.get("Resume", 0)  # Default to 0 if missing
+    if resume_val == 1:
+        resume_file = "Neeraj_Gupta_SDE1_1_ML.pdf"
+    else:
+        resume_file = "Neeraj_Gupta_SDE1_0_backend.pdf"
+        
     send_email(
         row["Receiver Name"],
         row["Company Name"],
         row["Job Link"],
         row["Receiver Email"],
+        resume_file
     )
