@@ -1,9 +1,15 @@
 #!/bin/bash
 
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BACKEND_DIR="$SCRIPT_DIR/backend"
+FRONTEND_DIR="$SCRIPT_DIR/frontend"
+
 # Function to handle script termination
 cleanup() {
     echo "Stopping all services..."
-    kill $(jobs -p)
+    jobs -p | xargs -r kill
     exit
 }
 
@@ -14,7 +20,13 @@ echo "Starting Gmail Tracking Dashboard..."
 
 # 1. Start Backend
 echo ">> Starting Backend..."
-cd backend
+cd "$BACKEND_DIR"
+# Ensure local env file exists.
+if [ ! -f ".env" ]; then
+    echo "Creating backend/.env from example..."
+    cp .env.example .env
+fi
+
 # Check if venv exists
 if [ ! -d "venv" ]; then
     echo "Virtual environment not found in backend/. Creating..."
@@ -25,19 +37,29 @@ else
     source venv/bin/activate
 fi
 
+BACKEND_PYTHON="$BACKEND_DIR/venv/bin/python"
+
+if [ ! -f "credentials.json" ]; then
+    echo "Missing backend/credentials.json."
+    echo "Download your OAuth client JSON from Google Cloud and place it at:"
+    echo "  $BACKEND_DIR/credentials.json"
+    echo "See CREDENTIALS_HELP.md for the exact steps."
+    exit 1
+fi
+
 # Run Migrations
 echo ">> Running Database Migrations..."
-python migrate_db.py
+"$BACKEND_PYTHON" migrate_db.py
 
 # Start FastApi
 echo ">> Launching API Server..."
-uvicorn main:app --reload --port 8000 &
+"$BACKEND_PYTHON" -m uvicorn main:app --reload --port 8000 &
 BACKEND_PID=$!
 cd ..
 
 # 2. Start Frontend
 echo ">> Starting Frontend..."
-cd frontend
+cd "$FRONTEND_DIR"
 # Check if node_modules exists
 if [ ! -d "node_modules" ]; then
     echo "Node modules not found. Installing..."

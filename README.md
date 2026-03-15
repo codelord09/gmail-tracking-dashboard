@@ -27,7 +27,6 @@ A privacy-first, read-only analytics dashboard that tracks and visualizes your s
 
 - **Python 3.8+**
 - **Node.js 16+**
-- **PostgreSQL** (running locally or remotely)
 - **Google Cloud Console Project** with Gmail API enabled.
 
 ## Setup Instructions
@@ -47,11 +46,11 @@ A privacy-first, read-only analytics dashboard that tracks and visualizes your s
 Create a `.env` file in the `backend/` directory:
 
 ```env
-DATABASE_URL=postgresql://user:password@localhost:5432/gmail_dashboard
+DATABASE_URL=sqlite:///./gmail_dashboard.db
 OAUTHLIB_INSECURE_TRANSPORT=1
 ```
 
-*(Replace `user:password` with your PostgreSQL credentials)*
+This project now defaults to a local SQLite database, so Postgres is optional. If you want Postgres instead, replace `DATABASE_URL` with your own connection string.
 
 ## Running the Project
 
@@ -63,9 +62,10 @@ We have provided a convenient script to start everything at once.
 
 This script will:
 1. Setup/Activate Python virtual environment.
-2. Run database migrations.
-3. Start the Backend server (Port 8000).
-4. Start the Frontend server (Port 5173).
+2. Create `backend/.env` from `backend/.env.example` if needed.
+3. Run database migrations.
+4. Start the Backend server (Port 8000).
+5. Start the Frontend server (Port 5173).
 
 Visit **http://localhost:5173** to view your dashboard.
 
